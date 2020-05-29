@@ -37,24 +37,24 @@ def possibleMovesCreator(space):
 
 # set x-axis ranges
 def setXRanges(space):
-    return np.arange(round(cornerPoints[2], numberOfDecimals), round(cornerPoints[0], numberOfDecimals), space)
+    return np.arange(cornerPoints[2], cornerPoints[0], space)
 
 
 # set y-axis ranges
 def setYRanges(space):
-    return np.arange(round(cornerPoints[3], numberOfDecimals), round(cornerPoints[1], numberOfDecimals), space)
+    return np.arange(cornerPoints[3], cornerPoints[1], space)
 
 
 # categorize all the records in grids
 def recordsOrganizer(records):
     OrganizedRecords = {}
     for i in range(len(records)):
-        x = round(records[i].shape.__geo_interface__["coordinates"][0], numberOfDecimals)
+        x = records[i].shape.__geo_interface__["coordinates"][0]
         for j in xRangeOriginalMap:
             if x > j:
                 A = j
                 break
-        y = round(records[i].shape.__geo_interface__["coordinates"][1], numberOfDecimals)
+        y = records[i].shape.__geo_interface__["coordinates"][1]
         for j in yRangeOriginalMap:
             if y > j:
                 B = j
@@ -75,12 +75,11 @@ def gridCreator():
                     grid['x'].append(x)
                     grid['y'].append(y)
                     grid['total'].append(len(categorizedRecords[(x, y)]))
-                    dangerousPoints.add((round(x, numberOfDecimals), round(y, numberOfDecimals)))
-                    dangerousPoints.add((round(x - interval, numberOfDecimals), round(y, numberOfDecimals)))
-                    dangerousPoints.add((round(x, numberOfDecimals), round(y - interval, numberOfDecimals)))
-                    dangerousPoints.add((round(x - interval, numberOfDecimals), round(y - interval, numberOfDecimals)))
-                    dangerousPoints.add(
-                        (round(x - interval / 2, numberOfDecimals), round(y - interval / 2, numberOfDecimals)))
+                    dangerousPoints.add((x, y))
+                    dangerousPoints.add((x - interval, y))
+                    dangerousPoints.add((x, y - interval))
+                    dangerousPoints.add((x - interval, y - interval))
+                    dangerousPoints.add((x - interval / 2, y - interval / 2))
                 else:
                     grid['x'].append(x)
                     grid['y'].append(y)
@@ -112,8 +111,8 @@ def pathFinder(sPoint, gPoint):
     UP, DOWN, RIGHT, LEFT = moves[0], moves[1], moves[2], moves[3]
     # Diagonal Moves
     UP_RIGHT, DOWN_RIGHT, UP_LEFT, DOWN_LEFT = moves[4], moves[5], moves[6], moves[7]
-    startPoint = (round(sPoint[0], numberOfDecimals), round(sPoint[1], numberOfDecimals))
-    goalPoint = (round(gPoint[0], numberOfDecimals), round(gPoint[1], numberOfDecimals))
+    startPoint = sPoint[0], sPoint[1]
+    goalPoint = gPoint[0], gPoint[1]
     came_from = {}
     visited_points = set()
     gScore = {startPoint: 0}
@@ -124,7 +123,7 @@ def pathFinder(sPoint, gPoint):
         # pick the best choice in the array
         adjacentPointsPQ.sort(key=lambda l: l[1])
         currentPoint = adjacentPointsPQ.pop(0)[0]
-        isCurrentPointRisky = currentPoint in dangerousPoints
+        isCurrentPointRisky = isDangeriousPoint(currentPoint)
         # if the point is the goal then we return the route from start to end
         if currentPoint == goalPoint:
             while currentPoint in came_from:
@@ -146,10 +145,9 @@ def pathFinder(sPoint, gPoint):
         for i, j in moves:
             # UP , DOWN , RIGHT , LEFT
             # UP-RIGHT ,DOWN-RIGHT , UP-LEFT, DOWN-LEFT
-            nextAdjacentPoint = round(currentPoint[0] + i, numberOfDecimals), round(currentPoint[1] + j,
-                                                                                    numberOfDecimals)
+            nextAdjacentPoint = currentPoint[0] + i, currentPoint[1] + j
 
-            isNextAdjacentPointRisky = nextAdjacentPoint in dangerousPoints
+            isNextAdjacentPointRisky = isDangeriousPoint(nextAdjacentPoint)
 
             # ignore it if was visited
             if nextAdjacentPoint in visited_points:
@@ -166,37 +164,24 @@ def pathFinder(sPoint, gPoint):
                         #    .|__      |__|.
                         # the first example is allowed; whereas, the second is not
                         if (i, j) == DOWN_RIGHT:
-                            if (round(currentPoint[0] + DOWN[0], numberOfDecimals),
-                                round(currentPoint[1] + DOWN[1], numberOfDecimals)) in dangerousPoints:
-                                if (round(currentPoint[0] + RIGHT[0], numberOfDecimals),
-                                    round(currentPoint[1] + RIGHT[1], numberOfDecimals)) in dangerousPoints:
-                                    if (round(currentPoint[0] + DOWN_RIGHT[0] / 2, numberOfDecimals),
-                                        round(currentPoint[1] + DOWN_RIGHT[1] / 2,
-                                              numberOfDecimals)) in dangerousPoints:
+                            if isDangeriousPoint((currentPoint[0] + DOWN[0],currentPoint[1] + DOWN[1])) :
+                                if isDangeriousPoint((currentPoint[0] + RIGHT[0],currentPoint[1] + RIGHT[1])):
+                                    if isDangeriousPoint((currentPoint[0] + DOWN_RIGHT[0] / 2,currentPoint[1] + DOWN_RIGHT[1] / 2)):
                                         continue
                         elif (i, j) == DOWN_LEFT:
-                            if (round(currentPoint[0] + DOWN[0], numberOfDecimals),
-                                round(currentPoint[1] + DOWN[1], numberOfDecimals)) in dangerousPoints:
-                                if (round(currentPoint[0] + LEFT[0], numberOfDecimals),
-                                    round(currentPoint[1] + LEFT[1], numberOfDecimals)) in dangerousPoints:
-                                    if (round(currentPoint[0] + DOWN_LEFT[0] / 2, numberOfDecimals),
-                                        round(currentPoint[1] + DOWN_LEFT[1] / 2, numberOfDecimals)) in dangerousPoints:
+                            if isDangeriousPoint((currentPoint[0] + DOWN[0],currentPoint[1] + DOWN[1])):
+                                if isDangeriousPoint((currentPoint[0] + LEFT[0],currentPoint[1] + LEFT[1])):
+                                    if isDangeriousPoint((currentPoint[0] + DOWN_LEFT[0] / 2,currentPoint[1] + DOWN_LEFT[1] / 2)):
                                         continue
                         elif (i, j) == UP_LEFT:
-                            if (round(currentPoint[0] + UP[0], numberOfDecimals),
-                                round(currentPoint[1] + UP[1], numberOfDecimals)) in dangerousPoints:
-                                if (round(currentPoint[0] + LEFT[0], numberOfDecimals),
-                                    round(currentPoint[1] + LEFT[1], numberOfDecimals)) in dangerousPoints:
-                                    if (round(currentPoint[0] + UP_LEFT[0] / 2, numberOfDecimals),
-                                        round(currentPoint[1] + UP_LEFT[1] / 2, numberOfDecimals)) in dangerousPoints:
+                            if isDangeriousPoint((currentPoint[0] + UP[0],currentPoint[1] + UP[1])):
+                                if isDangeriousPoint((currentPoint[0] + LEFT[0],currentPoint[1] + LEFT[1])):
+                                    if isDangeriousPoint((currentPoint[0] + UP_LEFT[0] / 2,currentPoint[1] + UP_LEFT[1] / 2)):
                                         continue
                         else:
-                            if (round(currentPoint[0] + UP[0], numberOfDecimals),
-                                round(currentPoint[1] + UP[1], numberOfDecimals)) in dangerousPoints:
-                                if (round(currentPoint[0] + RIGHT[0], numberOfDecimals),
-                                    round(currentPoint[1] + RIGHT[1], numberOfDecimals)) in dangerousPoints:
-                                    if (round(currentPoint[0] + UP_RIGHT[0] / 2, numberOfDecimals),
-                                        round(currentPoint[1] + UP_RIGHT[1] / 2, numberOfDecimals)) in dangerousPoints:
+                            if isDangeriousPoint((currentPoint[0] + UP[0],currentPoint[1] + UP[1])):
+                                if isDangeriousPoint((currentPoint[0] + RIGHT[0],currentPoint[1] + RIGHT[1])):
+                                    if isDangeriousPoint((currentPoint[0] + UP_RIGHT[0] / 2,currentPoint[1] + UP_RIGHT[1] / 2)):
                                         continue
 
                     # straight risky path avoid between two block
@@ -218,8 +203,7 @@ def pathFinder(sPoint, gPoint):
                 # array bound x walls
                 continue
 
-            if round(yRangeOriginalMap[-1], numberOfDecimals) > nextAdjacentPoint[1] or nextAdjacentPoint[1] > \
-                    yRangeOriginalMap[0]:
+            if yRangeOriginalMap[-1] > nextAdjacentPoint[1] or nextAdjacentPoint[1] > yRangeOriginalMap[0]:
                 # array bound y walls
                 continue
             # calculate the G score according to the came_from for diagonal came_from
@@ -227,7 +211,7 @@ def pathFinder(sPoint, gPoint):
                 tentative_g_score = gScore[currentPoint] + 1.5
             # calculate the G score according to the came_from for straight came_from
             else:
-                if currentPoint in dangerousPoints and nextAdjacentPoint in dangerousPoints:
+                if isCurrentPointRisky and isNextAdjacentPointRisky:
                     tentative_g_score = gScore[currentPoint] + 1.3
                 else:
                     tentative_g_score = gScore[currentPoint] + 1
@@ -251,48 +235,34 @@ def isDangerousMove(p, direction):
     # UP , DOWN , RIGHT , LEFT
     # UP-RIGHT ,DOWN-RIGHT , UP-LEFT, DOWN-LEFT
     if direction == 0:
-        if (
-                round(p[0] + interval / 2, numberOfDecimals),
-                round(p[1] + interval / 2, numberOfDecimals)) in dangerousPoints:
-            if (round(p[0] - interval / 2, numberOfDecimals),
-                round(p[1] + interval / 2, numberOfDecimals)) in dangerousPoints:
+        if isDangeriousPoint((p[0] + interval / 2,p[1] + interval / 2)):
+            if isDangeriousPoint((p[0] - interval / 2,p[1] + interval / 2)):
                 return True
     elif direction == 1:
-        if (
-                round(p[0] + interval / 2, numberOfDecimals),
-                round(p[1] - interval / 2, numberOfDecimals)) in dangerousPoints:
-            if (round(p[0] - interval / 2, numberOfDecimals),
-                round(p[1] - interval / 2, numberOfDecimals)) in dangerousPoints:
+        if isDangeriousPoint((p[0] + interval / 2,p[1] - interval / 2)):
+            if isDangeriousPoint((p[0] - interval / 2,p[1] - interval / 2)):
                 return True
     elif direction == 2:
-        if (
-                round(p[0] + interval / 2, numberOfDecimals),
-                round(p[1] + interval / 2, numberOfDecimals)) in dangerousPoints:
-            if (round(p[0] + interval / 2, numberOfDecimals),
-                round(p[1] - interval / 2, numberOfDecimals)) in dangerousPoints:
+        if isDangeriousPoint((p[0] + interval / 2,p[1] + interval / 2)):
+            if isDangeriousPoint((p[0] + interval / 2,p[1] - interval / 2)):
                 return True
     else:
-        if (
-                round(p[0] - interval / 2, numberOfDecimals),
-                round(p[1] + interval / 2, numberOfDecimals)) in dangerousPoints:
-            if (round(p[0] - interval / 2, numberOfDecimals),
-                round(p[1] - interval / 2, numberOfDecimals)) in dangerousPoints:
+        if isDangeriousPoint((p[0] - interval / 2,p[1] + interval / 2)):
+            if isDangeriousPoint((p[0] - interval / 2,p[1] - interval / 2)):
                 return True
     return False
 
 
 # centralize the point to the right top corner of its the grid
 def pointCentralizer(p):
-    A = round(xRangeOriginalMap[-1], numberOfDecimals)
-    B = round(yRangeOriginalMap[-1], numberOfDecimals)
-    xP = round(p[0], numberOfDecimals)
-    yP = round(p[1], numberOfDecimals)
+    A = xRangeOriginalMap[-1]
+    B = yRangeOriginalMap[-1]
     for v in xRangeOriginalMap[::-1]:
-        if xP <= v:
+        if p[0] <= v:
             A = v
             break
     for w in yRangeOriginalMap[::-1]:
-        if yP <= w:
+        if p[1] <= w:
             B = w
             break
     return A, B
@@ -338,6 +308,13 @@ def calculateThreshold(num, df_stats):
         result = df['average'].min()
     return result
 
+
+def isDangeriousPoint(point):
+    tolerance = interval / 6
+    for p in dangerousPoints:
+        if abs(point[0] - p[0]) <= tolerance:
+            if abs(point[1] - p[1]) <= tolerance:
+                return True
 
 if __name__ == "__main__":
 
@@ -403,8 +380,8 @@ if __name__ == "__main__":
     # Timing the Path Finder function up to 10 sec
     # Creating the main thread that executes the function
     pathFinder(start, goal)
-    xRangeOriginalMap = np.linspace(round(cornerPoints[2], numberOfDecimals), round(cornerPoints[0], numberOfDecimals), len(xRangeOriginalMap), endpoint=False)
-    yRangeOriginalMap = np.linspace(round(cornerPoints[3], numberOfDecimals), round(cornerPoints[1], numberOfDecimals), len(yRangeOriginalMap), endpoint=False)
+    xRangeOriginalMap = np.linspace(cornerPoints[2], cornerPoints[0], len(xRangeOriginalMap), endpoint=False)
+    yRangeOriginalMap = np.linspace(cornerPoints[3], cornerPoints[1], len(yRangeOriginalMap), endpoint=False)
     path_x_coords = []
     path_y_coords = []
     for p in pathTracer:
@@ -427,5 +404,7 @@ if __name__ == "__main__":
     if (time.time() - start_time > 10):
         print("time out")
         print("--- %s seconds ---" % (time.time() - start_time))
+    else:
+        print("perfect")
     plt.show()
 

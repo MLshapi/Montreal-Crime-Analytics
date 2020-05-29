@@ -1,4 +1,4 @@
-You need to download all the filles in the same Directory.
+You need to download all the files in the same Directory.
 
 
 
