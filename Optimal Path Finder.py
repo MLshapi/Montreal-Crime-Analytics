@@ -289,10 +289,10 @@ def chooseStartGoalPoints():
     print("press 0 to Enter another point")
     userInput = int(input())
     if userInput == 0:
-        xStart = int(input("Enter x of start Point"))
-        yStart = int(input("Enter y of start Point"))
-        xGoal = int(input("Enter x of goal Point"))
-        yGoal = int(input("Enter y of goal Point"))
+        xStart = float(input("Enter x of start Point"))
+        yStart = float(input("Enter y of start Point"))
+        xGoal = float(input("Enter x of goal Point"))
+        yGoal = float(input("Enter y of goal Point"))
         return (xStart, yStart), (xGoal, yGoal)
     else:
         return points[userInput - 1]
